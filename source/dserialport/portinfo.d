@@ -1,4 +1,4 @@
-module dserialport.info;
+module dserialport.portinfo;
 
 version(OS_with_udev)
 {
@@ -8,6 +8,11 @@ version(OS_with_udev)
 class SerialPortInfo
 {
 public:
+    static SerialPortInfo[] availablePorts() @property
+    {
+        return mImpl.getAvailablePorts();
+    }
+
     string portName() const @property
     {
         return mImpl.portName;
@@ -38,11 +43,10 @@ public:
         return mImpl.productIdentifier;
     }
 
-private:
-    this()
+    package this()
     {
         mImpl = new SerialPortInfoPrivate();
     }
 
-    SerialPortInfoPrivate mImpl;
+    package SerialPortInfoPrivate mImpl;
 }
