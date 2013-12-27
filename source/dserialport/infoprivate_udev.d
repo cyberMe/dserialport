@@ -4,6 +4,8 @@ import std.conv;
 
 import dserialport.portinfo;
 
+private
+{
 // udev's entities
 struct udev;
 struct udev_enumerate;
@@ -24,6 +26,7 @@ extern (C) const(char) * udev_list_entry_get_name(udev_list_entry * list_entry_)
 extern (C) const(char) * udev_device_get_devnode(udev_device * udev_device_);
 extern (C) const(char) * udev_device_get_sysname(udev_device * udev_device_);
 extern (C) udev_device * udev_device_get_parent(udev_device * udev_device_);
+}
 
 package class SerialPortInfoPrivate
 {
