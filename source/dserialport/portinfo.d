@@ -4,13 +4,21 @@ version(OS_with_udev)
 {
     import dserialport.infoprivate_udev;
 }
+else version(Windows)
+{
+    import dserialport.infoprivate_windows;
+}
+else
+{
+    static assert(false, "Unsupported OS");
+}
 
-class SerialPortInfo
+public class SerialPortInfo
 {
 public:
     static SerialPortInfo[] availablePorts() @property
     {
-        return mImpl.getAvailablePorts();
+        return SerialPortInfoPrivate.availablePorts;
     }
 
     string portName() const @property

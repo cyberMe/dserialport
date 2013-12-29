@@ -31,7 +31,7 @@ extern (C) udev_device * udev_device_get_parent(udev_device * udev_device_);
 package class SerialPortInfoPrivate
 {
 public:
-    static SerialPortInfo[] getAvailablePorts()
+    static SerialPortInfo[] availablePorts() @property
     {
         SerialPortInfo[] availablePorts;
 
