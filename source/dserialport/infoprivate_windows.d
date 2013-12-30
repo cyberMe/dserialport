@@ -170,7 +170,10 @@ string deviceRegistryProperty(in HDEVINFO deviceInfoSet, in PSP_DEVINFO_DATA dev
 {
     DWORD dataType = 0;
     DWORD byteCount = 0;
-    if (!SetupDiGetDeviceRegistryPropertyW(deviceInfoSet, deviceInfoData, property, &dataType, null, 0, &byteCount))
+    // This function returns ERROR_INSUFFICIENT_BUFFER after try to get required buffer size
+    // Also it has bug with DBCS for win2000 http://support.microsoft.com/kb/888609/en-us
+    SetupDiGetDeviceRegistryPropertyW(deviceInfoSet, deviceInfoData, property, &dataType, null, 0, &byteCount);
+    if (0 == byteCount)
     {
         return null;
     }
@@ -215,7 +218,9 @@ string deviceRegistryProperty(in HDEVINFO deviceInfoSet, in PSP_DEVINFO_DATA dev
 string deviceInstanceIdentifier(in HDEVINFO deviceInfoSet, in PSP_DEVINFO_DATA deviceInfoData)
 {
     DWORD wcharCount = 0;
-    if (!SetupDiGetDeviceInstanceIdW(deviceInfoSet, deviceInfoData, null, 0, &wcharCount))
+    // This function returns ERROR_INSUFFICIENT_BUFFER after try to get required buffer size
+    SetupDiGetDeviceInstanceIdW(deviceInfoSet, deviceInfoData, null, 0, &wcharCount);
+    if (0 == wcharCount)
     {
         return null;
     }
