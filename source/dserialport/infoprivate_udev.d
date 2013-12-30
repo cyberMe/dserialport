@@ -76,7 +76,7 @@ public:
             const(char) * systemName = udev_device_get_sysname(device);
 
             auto port = new SerialPortInfo();
-            port.mImpl.systemLocation = to!(string)(deviceNode);
+            port.mImpl.device = to!(string)(deviceNode);
             port.mImpl.portName = to!(string)(systemName);
 
             availablePorts ~= port;
