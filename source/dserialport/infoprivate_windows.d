@@ -242,16 +242,6 @@ string deviceInstanceIdentifier(in HDEVINFO deviceInfoSet, in PSP_DEVINFO_DATA d
 package class SerialPortInfoPrivate
 {
 public:
-    string portName;
-    string device;
-    string systemLocation;
-    string description;
-    string manufacturer;
-    ushort vendorIdentifier;
-    ushort productIdentifier;
-    bool hasVendorIdentifier = false;
-    bool hasProductIdentifier = false;
-
     static SerialPortInfo[] availablePorts() @property
     {
         static immutable usbVendorIdentifierPrefix = "VID_";
@@ -347,4 +337,13 @@ public:
         }
         return defaultPathPrefix ~ port;
     }
+
+    string portName;
+    string device;
+    string description;
+    string manufacturer;
+    ushort vendorIdentifier;
+    ushort productIdentifier;
+    bool hasVendorIdentifier;
+    bool hasProductIdentifier;
 }

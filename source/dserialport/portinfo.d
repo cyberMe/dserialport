@@ -28,7 +28,7 @@ public:
 
     string systemLocation() const @property
     {
-        return mImpl.systemLocation;
+        return mImpl.device;
     }
 
     string description() const @property

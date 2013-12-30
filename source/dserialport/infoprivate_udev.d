@@ -86,9 +86,11 @@ public:
     }
 
     string portName;
-    string systemLocation;
+    string device;
     string description;
     string manufacturer;
     ushort vendorIdentifier;
     ushort productIdentifier;
+    bool hasVendorIdentifier;
+    bool hasProductIdentifier;
 }
