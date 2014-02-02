@@ -3,10 +3,10 @@ module dserialport.infoprivate_windows;
 pragma(lib, "advapi32.lib");
 pragma(lib, "setupapi.lib");
 
-import std.string;
-import std.conv;
-import std.algorithm : canFind;
-import std.array : empty;
+import std.string : toUpper, startsWith;
+import std.conv : toImpl;
+import std.algorithm : canFind, find;
+import std.array : empty, uninitializedArray;
 import std.utf : toUTF8;
 import std.c.windows.com : GUID;
 import core.sys.windows.windows;
@@ -24,8 +24,8 @@ struct SP_DEVINFO_DATA
     ULONG_PTR Reserved;
 }
 
-alias PVOID HDEVINFO;
-alias SP_DEVINFO_DATA *PSP_DEVINFO_DATA;
+alias HDEVINFO = PVOID;
+alias PSP_DEVINFO_DATA = SP_DEVINFO_DATA*;
 
 // Flags controlling what is included in the device information set built
 // by SetupDiGetClassDevs
@@ -106,7 +106,7 @@ enum
     SPDRP_MAXIMUM_PROPERTY            = 0x00000025  // Upper bound on ordinals
 }
 
-extern (Windows)
+extern (Windows) nothrow
 {
     HDEVINFO SetupDiGetClassDevsW(in GUID *ClassGuid, in PCWSTR Enumerator, in HWND hwndParent, in DWORD Flags);
     BOOL SetupDiEnumDeviceInfo(in HDEVINFO DeviceInfoSet, in DWORD MemberIndex, PSP_DEVINFO_DATA DeviceInfoData);
@@ -142,7 +142,7 @@ string devicePortName(in HDEVINFO deviceInfoSet, in PSP_DEVINFO_DATA deviceInfoD
     static immutable portKeyName = "PortName"w;
 
     const key = SetupDiOpenDevRegKey(deviceInfoSet, deviceInfoData, DICS_FLAG_GLOBAL,
-                                         0, DIREG_DEV, KEY_READ);
+                                     0, DIREG_DEV, KEY_READ);
     if (INVALID_HANDLE_VALUE == key)
     {
         return null;
@@ -155,8 +155,8 @@ string devicePortName(in HDEVINFO deviceInfoSet, in PSP_DEVINFO_DATA deviceInfoD
         return null;
     }
 
-    wchar[] data;
-    data.length = byteCount / typeof(data[0]).sizeof;
+    alias ElementType = wchar;
+    auto data = uninitializedArray!(ElementType[])(byteCount / ElementType.sizeof);
     if (RegQueryValueExW(key, portKeyName.ptr, null, null, data.ptr, &byteCount) != ERROR_SUCCESS)
     {
         return null;
@@ -178,15 +178,15 @@ string deviceRegistryProperty(in HDEVINFO deviceInfoSet, in PSP_DEVINFO_DATA dev
         return null;
     }
 
-    wchar[] data;
-    data.length = byteCount / typeof(data[0]).sizeof;
+    alias ElementType = wchar;
+    auto data = uninitializedArray!(ElementType[])(byteCount / ElementType.sizeof);
     if (!SetupDiGetDeviceRegistryPropertyW(deviceInfoSet, deviceInfoData, property,
             null, cast(PBYTE)data.ptr, byteCount, null))
     {
         return null;
     }
 
-    switch (dataType)
+    final switch (dataType)
     {
         case REG_EXPAND_SZ:
         case REG_SZ:
@@ -209,10 +209,9 @@ string deviceRegistryProperty(in HDEVINFO deviceInfoSet, in PSP_DEVINFO_DATA dev
             return QVariant(list);*/
             assert(false, "TODO: not implemented");
         }
-
-        default:
-            return null;
     }
+
+    return null;
 }
 
 string deviceInstanceIdentifier(in HDEVINFO deviceInfoSet, in PSP_DEVINFO_DATA deviceInfoData)
@@ -225,8 +224,7 @@ string deviceInstanceIdentifier(in HDEVINFO deviceInfoSet, in PSP_DEVINFO_DATA d
         return null;
     }
 
-    wchar[] data;
-    data.length = wcharCount;
+    auto data = uninitializedArray!(wchar[])(wcharCount);
     if (!SetupDiGetDeviceInstanceIdW(deviceInfoSet, deviceInfoData, data.ptr, data.length, null))
     {
         // TODO: error handling with GetLastError
@@ -282,20 +280,19 @@ public:
                     manufacturer = deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG);
                 }
 
-                bool getIdentifierFromHex(in string content, in string key, in int size, out ushort identifier)
+                bool getIdentifierFromHex(in string content, in string key, in int size, out ushort identifier) pure nothrow
                 {
-                    auto index = content.indexOf(key);
-                    if (-1 == index)
+                    immutable found = content.find(key);
+                    if (found.empty)
                     {
                         return false;
                     }
 
-                    index += key.length;
                     try
                     {
-                        identifier = content[index .. index + size].toImpl!ushort(16);
+                        identifier = found[key.length .. key.length + size].toImpl!ushort(16);
                     }
-                    catch(ConvException)
+                    catch(Exception)
                     {
                         return false;
                     }
@@ -329,7 +326,7 @@ public:
         return serialPortInfoList;
     }
     
-    static string portNameToSystemLocation(in string port)
+    static string portNameToSystemLocation(in string port) pure nothrow @safe
     {
         if (port.startsWith(defaultPathPrefix))
         {
